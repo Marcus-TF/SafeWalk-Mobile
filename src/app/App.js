@@ -17,7 +17,7 @@ import RegisterOccurrenceScreen from '../screens/RegisterOccurrenceScreen';
 
 // 🔥 NOVAS TELAS
 import ProfileScreen from '../screens/ProfileScreen';
-import PrivacyScreen from '../screens/PrivacyScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AboutScreen from '../screens/AboutScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
@@ -85,7 +85,7 @@ export default function App() {
 
           {/* NOVAS TELAS INTERNAS */}
           <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Privacy" component={PrivacyScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Help" component={HelpScreen} />
           <Stack.Screen name="About" component={AboutScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />

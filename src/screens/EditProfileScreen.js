@@ -80,7 +80,7 @@ export default function EditProfileScreen({ navigation }) {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.title}>Editar Perfil</Text>
       </View>
@@ -179,13 +179,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 60,
     paddingBottom: 20,
-    paddingHorizontal: 24,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+    backgroundColor: '#020617',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#0f172a',
+    zIndex: 10,
   },
-  backButton: { marginRight: 16 },
-  title: { fontSize: 20, fontWeight: '700', color: '#0f172a' },
+  backButton: { marginRight: 16, padding: 4 },
+  title: { fontSize: 20, fontWeight: '600', color: '#ffffff' },
   scroll: { padding: 24 },
   card: {
     backgroundColor: '#ffffff',
