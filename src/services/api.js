@@ -2,8 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const BASE_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-const API_BASE_URL = `http://${BASE_HOST}:8080/api`;
+const API_BASE_URL = 'https://safewalk-backend-4xxk.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
