@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert, Modal, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { occurrenceAPI } from '../services/api';
+
+const occurrenceIcons = {
+  "Assalto": "🚨", "Furto": "👜", "Roubo de Veículo": "🚗",
+  "Vandalismo": "🧱", "Pessoa Suspeita": "🕵️", "Iluminação Precária": "💡",
+  "Área Deserta": "🌑", "Outro": "📍",
+};
 
 export default function RegisterOccurrenceScreen({ navigation, route }) {
   const isEditing = !!route.params?.item;
@@ -19,6 +24,8 @@ export default function RegisterOccurrenceScreen({ navigation, route }) {
   const [latitude, setLatitude] = useState(isEditing ? editingData.latitude : null);
   const [longitude, setLongitude] = useState(isEditing ? editingData.longitude : null);
   const [loading, setLoading] = useState(false);
+
+  const [showTypeModal, setShowTypeModal] = useState(false);
 
   const fetchAddress = async (lat, lon) => {
     try {
@@ -63,37 +70,45 @@ export default function RegisterOccurrenceScreen({ navigation, route }) {
     }
   };
 
+  const typesList = ['Assalto','Furto','Roubo de Veículo','Vandalismo','Pessoa Suspeita','Iluminação Precária','Área Deserta','Outro'];
+
   return (
     <View style={styles.base}>
-      {/* Dark Slate Web Header */}
       <View style={styles.topHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.brandText}>{isEditing ? "Editar Registro" : "Nova Ocorrência"}</Text>
+        <Text style={styles.brandText}>{isEditing ? "Editar Ocorrência" : "Registrar Ocorrência"}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>Tipo de Perigo</Text>
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={type} onValueChange={setType} style={styles.picker}>
-              {['Assalto','Furto','Roubo de Veículo','Vandalismo','Pessoa Suspeita','Iluminação Precária','Área Deserta','Outro'].map((t) => (
-                <Picker.Item key={t} label={t} value={t} />
-              ))}
-            </Picker>
-          </View>
+          <TouchableOpacity style={styles.customSelect} onPress={() => setShowTypeModal(true)}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+               <Text style={styles.emojiIcon}>{occurrenceIcons[type]}</Text>
+               <Text style={styles.customSelectText}>{type}</Text>
+            </View>
+            <Ionicons name="chevron-down" size={20} color="#94a3b8" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>Nível de Risco</Text>
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={risk} onValueChange={setRisk} style={styles.picker}>
-              {['Baixo', 'Médio', 'Alto'].map((t) => (
-                <Picker.Item key={t} label={t} value={t} />
-              ))}
-            </Picker>
+          <View style={styles.pillContainer}>
+            {['Baixo', 'Médio', 'Alto'].map((r) => {
+               const isActive = risk === r;
+               return (
+                 <TouchableOpacity 
+                   key={r} 
+                   style={[styles.pillBtn, isActive && styles.pillBtnActive]}
+                   onPress={() => setRisk(r)}
+                 >
+                   <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{r}</Text>
+                 </TouchableOpacity>
+               )
+            })}
           </View>
         </View>
 
@@ -103,7 +118,7 @@ export default function RegisterOccurrenceScreen({ navigation, route }) {
             style={[styles.input, styles.textArea]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Descreva o que aconteceu em detalhes..."
+            placeholder="Descreva o ocorrido..."
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -121,13 +136,13 @@ export default function RegisterOccurrenceScreen({ navigation, route }) {
         </View>
 
         <View style={styles.switchWrapper}>
-          <Text style={styles.switchLabel}>Registrar de forma anônima</Text>
-          <Switch value={isAnonymous} onValueChange={setIsAnonymous} trackColor={{ false: '#cbd5e1', true: '#60a5fa' }} thumbColor={isAnonymous ? '#2563eb' : '#f8fafc'} />
+          <Text style={styles.switchLabel}>Registrar anonimamente</Text>
+          <Switch value={isAnonymous} onValueChange={setIsAnonymous} trackColor={{ false: '#cbd5e1', true: '#ea580c' }} thumbColor={isAnonymous ? '#ffffff' : '#f8fafc'} />
         </View>
 
         <TouchableOpacity style={styles.gpsBtn} onPress={getUserLocation}>
-          <Ionicons name="locate" size={20} color="#2563eb" />
-          <Text style={styles.gpsBtnText}>Usar localização atual do satélite</Text>
+          <Ionicons name="location" size={20} color="#ea580c" />
+          <Text style={styles.gpsBtnText}>Usar localização atual</Text>
         </TouchableOpacity>
 
         <View style={styles.mapContainer}>
@@ -152,12 +167,33 @@ export default function RegisterOccurrenceScreen({ navigation, route }) {
           {loading ? <ActivityIndicator color="#fff" /> : (
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <Ionicons name="send" size={20} color="#ffffff" style={{marginRight: 8}}/>
-                <Text style={styles.submitText}>Transmitir Ocorrência</Text>
+                <Text style={styles.submitText}>Enviar Registro</Text>
             </View>
           )}
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Modal for Type Selection */}
+      <Modal visible={showTypeModal} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowTypeModal(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Selecione o Tipo</Text>
+            <FlatList 
+              data={typesList}
+              keyExtractor={(i) => i}
+              renderItem={({item}) => (
+                <TouchableOpacity style={styles.modalOption} onPress={() => { setType(item); setShowTypeModal(false); }}>
+                  <Text style={styles.modalOptionEmoji}>{occurrenceIcons[item]}</Text>
+                  <Text style={styles.modalOptionText}>{item}</Text>
+                  {type === item && <Ionicons name="checkmark" size={20} color="#ea580c" />}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </View>
   );
 }
@@ -172,20 +208,35 @@ const styles = StyleSheet.create({
   
   inputWrapper: { marginBottom: 20 },
   label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 8 },
-  pickerContainer: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, backgroundColor: '#ffffff', overflow: 'hidden' },
-  picker: { height: 50, color: '#0f172a' },
   input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: '#0f172a', backgroundColor: '#ffffff' },
   textArea: { minHeight: 100 },
   
+  customSelect: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' },
+  customSelectText: { fontSize: 16, color: '#0f172a' },
+  emojiIcon: { fontSize: 16, marginRight: 8 },
+  
+  pillContainer: { flexDirection: 'row', gap: 8 },
+  pillBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#ffffff', alignItems: 'center' },
+  pillBtnActive: { borderColor: '#ea580c', backgroundColor: '#ea580c' },
+  pillText: { fontSize: 15, fontWeight: '600', color: '#64748b' },
+  pillTextActive: { color: '#ffffff' },
+
   switchWrapper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, marginBottom: 20 },
   switchLabel: { fontSize: 16, fontWeight: '500', color: '#334155' },
   
-  gpsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderWidth: 1, borderColor: '#bfdbfe', backgroundColor: '#eff6ff', borderRadius: 12, marginBottom: 16 },
-  gpsBtnText: { color: '#2563eb', fontWeight: 'bold', marginLeft: 8 },
+  gpsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderWidth: 1, borderColor: '#fdba74', backgroundColor: '#fff7ed', borderRadius: 12, marginBottom: 16 },
+  gpsBtnText: { color: '#ea580c', fontWeight: 'bold', marginLeft: 8 },
 
   mapContainer: { height: 250, borderRadius: 16, overflow: 'hidden', marginBottom: 30, borderWidth: 1, borderColor: '#e2e8f0' },
   map: { flex: 1 },
   
-  submitButton: { backgroundColor: '#2563eb', paddingVertical: 18, borderRadius: 16, alignItems: 'center', shadowColor: '#2563eb', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8, marginBottom: 40 },
+  submitButton: { backgroundColor: '#ea580c', paddingVertical: 18, borderRadius: 16, alignItems: 'center', shadowColor: '#ea580c', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8, marginBottom: 40 },
   submitText: { color: '#ffffff', fontSize: 18, fontWeight: '700' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '60%' },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16, textAlign: 'center' },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  modalOptionEmoji: { fontSize: 20, marginRight: 16 },
+  modalOptionText: { flex: 1, fontSize: 16, color: '#334155' }
 });

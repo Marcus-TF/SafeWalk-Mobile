@@ -59,7 +59,7 @@ export default function ProfileScreen({ navigation }) {
              <Ionicons name="chevron-forward" color="#cbd5e1" size={20}/>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('Aviso', 'Notificações estão ativas por padrão pelo Expo Geofence.')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Settings')}>
              <View style={[styles.menuIcon, {backgroundColor: '#fef9c3'}]}><Ionicons name="notifications-outline" color="#eab308" size={20}/></View>
              <Text style={styles.menuText}>Notificações de Alerta</Text>
              <Ionicons name="chevron-forward" color="#cbd5e1" size={20}/>
@@ -71,7 +71,7 @@ export default function ProfileScreen({ navigation }) {
              <Ionicons name="chevron-forward" color="#cbd5e1" size={20}/>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('Sobre', 'SafeWalk v1.0.0')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('About')}>
              <View style={[styles.menuIcon, {backgroundColor: '#f3f4f6'}]}><Ionicons name="information-circle-outline" color="#6b7280" size={20}/></View>
              <Text style={styles.menuText}>Sobre</Text>
              <Ionicons name="chevron-forward" color="#cbd5e1" size={20}/>
