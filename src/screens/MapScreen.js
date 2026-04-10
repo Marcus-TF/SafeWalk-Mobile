@@ -31,6 +31,21 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
+const getPredominantType = (hotspot) => {
+  if (!hotspot || !hotspot.occurrencesList) return 'Desconhecido';
+  const counts = {};
+  let maxType = 'Desconhecido';
+  let maxCount = 0;
+  hotspot.occurrencesList.forEach(occ => {
+    counts[occ.type] = (counts[occ.type] || 0) + 1;
+    if (counts[occ.type] > maxCount) {
+      maxCount = counts[occ.type];
+      maxType = occ.type;
+    }
+  });
+  return maxType;
+};
+
 export default function MapScreen({ navigation }) {
   const [occurrences, setOccurrences] = useState([]);
   const [hotspots, setHotspots] = useState([]);
@@ -62,10 +77,10 @@ export default function MapScreen({ navigation }) {
         const lng = location.coords.longitude;
         setUserLocation({ latitude: lat, longitude: lng });
 
-        setOccurrences((prevOccurrences) => {
+        setHotspots((prevHotspots) => {
           const nearby = [];
-          prevOccurrences.forEach((occ) => {
-            if (getDistance(lat, lng, occ.latitude, occ.longitude) < 0.25) nearby.push(occ);
+          prevHotspots.forEach((hs) => {
+            if (getDistance(lat, lng, hs.latitude, hs.longitude) <= 0.25) nearby.push(hs);
           });
           
           if (nearby.length > 0) {
@@ -74,17 +89,17 @@ export default function MapScreen({ navigation }) {
 
           let newAlertTriggered = false;
 
-          nearby.forEach((occ) => {
+          nearby.forEach((hs) => {
             setAlertedIds((prev) => {
-              if (!prev.has(occ.id)) {
+              if (!prev.has(hs.id)) {
                 
                 Vibration.vibrate([200, 100, 200, 100, 400]);
 
                 if (notifStatus === 'granted') {
                   Notifications.scheduleNotificationAsync({
                     content: {
-                      title: "⚠️ Área de Risco Detectada",
-                      body: `Ocorrência próxima: ${occ.type} (${occ.risk} Risco). Fique atento!`,
+                      title: `⚠️ Área de Risco ${hs.risk} Detectada`,
+                      body: `Atenção: Você entrou no raio de uma zona com ${hs.occurrencesList?.length || 5} registros!`,
                       sound: true,
                     },
                     trigger: null,
@@ -93,7 +108,7 @@ export default function MapScreen({ navigation }) {
                 
                 newAlertTriggered = true;
                 const newSet = new Set(prev);
-                newSet.add(occ.id);
+                newSet.add(hs.id);
                 return newSet;
               }
               return prev;
@@ -104,7 +119,7 @@ export default function MapScreen({ navigation }) {
             showToast();
           }
 
-          return prevOccurrences;
+          return prevHotspots;
         });
       }
     );
@@ -153,7 +168,7 @@ export default function MapScreen({ navigation }) {
               />
               <Circle
                 center={{ latitude: hotspot.latitude, longitude: hotspot.longitude }}
-                radius={200}
+                radius={250}
                 fillColor={getRiskColor(hotspot.risk) === 'red' ? 'rgba(239,68,68,0.25)' : getRiskColor(hotspot.risk) === 'orange' ? 'rgba(245,158,11,0.25)' : 'rgba(34,197,94,0.25)'}
                 strokeColor={getRiskColor(hotspot.risk) === 'red' ? 'rgba(239,68,68,0.5)' : getRiskColor(hotspot.risk) === 'orange' ? 'rgba(245,158,11,0.5)' : 'rgba(34,197,94,0.5)'}
               />
@@ -165,14 +180,14 @@ export default function MapScreen({ navigation }) {
       <Animated.View style={[
           styles.alertBanner, 
           { opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] },
-          { borderTopColor: activeAlerts[0]?.risk === 'Alto' ? '#ef4444' : '#f59e0b' }
+          { borderTopColor: activeAlerts[0]?.risk === 'Alto' ? '#ef4444' : activeAlerts[0]?.risk === 'Médio' ? '#f59e0b' : '#22c55e' }
       ]}>
         {activeAlerts.length > 0 && (
           <>
-            <Ionicons name="warning" size={28} color={activeAlerts[0]?.risk === 'Alto' ? '#ef4444' : '#f59e0b'} />
+            <Ionicons name="warning" size={28} color={activeAlerts[0]?.risk === 'Alto' ? '#ef4444' : activeAlerts[0]?.risk === 'Médio' ? '#f59e0b' : '#22c55e'} />
             <View style={{ marginLeft: 12, flex: 1 }}>
               <Text style={styles.alertTitle}>Alerta Ativo!</Text>
-              <Text style={styles.alertText}>Você está dentro do raio de 250m de ocorrência de {activeAlerts[0]?.type} ({activeAlerts[0]?.risk} Risco).</Text>
+              <Text style={styles.alertText}>Você entrou de uma Área de Risco {activeAlerts[0]?.risk} mapeada com {activeAlerts[0]?.occurrencesList?.length || 5} ocorrências ativas.</Text>
             </View>
           </>
         )}
@@ -192,13 +207,14 @@ export default function MapScreen({ navigation }) {
         <View style={styles.modalOverlay}>
            <View style={styles.modalCard}>
              <View style={styles.modalHeaderLine}>
-                 <Text style={styles.modalTitle}>Cluster Consolidado</Text>
+                 <Text style={styles.modalTitle}>Detalhes do Risco</Text>
                  <TouchableOpacity onPress={() => setSelectedHotspot(null)}>
                      <Ionicons name="close-circle" size={28} color="#9ca3af" />
                  </TouchableOpacity>
              </View>
              <Text style={styles.modalDescription}>Ameaça Predominante: <Text style={{fontWeight: '700', color: getRiskColor(selectedHotspot?.risk)}}>{selectedHotspot?.risk}</Text></Text>
-             <Text style={styles.modalSubHeader}>Ocorrências Densas Agrupadas: {selectedHotspot?.occurrencesList?.length}</Text>
+             <Text style={styles.modalDescription}>Principal Ocorrência: <Text style={{fontWeight: '700', color: '#1e293b'}}>{getPredominantType(selectedHotspot)}</Text></Text>
+             <Text style={styles.modalSubHeader}>Total de Registros na Área: {selectedHotspot?.occurrencesList?.length}</Text>
              <TouchableOpacity style={styles.modalButton} onPress={() => setSelectedHotspot(null)}>
                <Text style={styles.modalButtonText}>Entendido</Text>
              </TouchableOpacity>
