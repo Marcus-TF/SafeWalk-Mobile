@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "SafeWalk",
+    "slug": "safewalk-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.safewalk.mobile"
+    },
+    "android": {
+      "package": "com.safewalk.mobile",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDIow2PZGEVvuDaWYJjyFFmyyTIztRzR4g"
+        }
+      }
+    },
+    "web": {},
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SafeWalk to use your location to show nearby occurrences."
+        }
+      ],
+      "expo-asset"
+    ]
+  },
+  "ios": {
+    "config": {
+      "googleMapsApiKey": "SUA_API_IOS"
+    }
+  }
+}
