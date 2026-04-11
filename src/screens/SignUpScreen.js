@@ -55,7 +55,7 @@ export default function SignUpScreen({ navigation }) {
           
           <View style={styles.header}>
             <Text style={styles.title}>Criar Conta</Text>
-            <Text style={styles.subtitle}>Junte-se ao co-piloto da sua segurança cívica.</Text>
+            <Text style={styles.subtitle}>Junte-se ao co-piloto da sua segurança.</Text>
           </View>
 
           <View style={styles.card}>
@@ -76,21 +76,6 @@ export default function SignUpScreen({ navigation }) {
                   style={styles.input}
                   value={name}
                   onChangeText={setName}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Telefone</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="call-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
-                <TextInput
-                  placeholder="(00) 00000-0000"
-                  placeholderTextColor="#9ca3af"
-                  style={styles.input}
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
                 />
               </View>
             </View>
